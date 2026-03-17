@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Overlay</title>
+
+<style>
+body {
+    margin: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+#overlayRoot {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+}
+
+#overlayBackground {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+}
+
+#overlayTopStack {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#matchMetaBar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 12px;
+    color: white;
+    background: rgba(12, 12, 12, 0.76);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(2px);
+}
+
+.meta-text {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.meta-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+#overlayWrap {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.side-panel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 74px;
+    padding: 0 18px;
+    border-radius: 14px;
+    color: white;
+    background: rgba(12, 12, 12, 0.82);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+.side-panel.blue {
+    border: 2px solid #2d6cff;
+}
+
+.side-panel.orange {
+    border: 2px solid #ff7b2d;
+}
+
+.team-name-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 230px;
+}
+
+.team-logo-wrap {
+    width: 132px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 132px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.team-logo {
+    width: auto;
+    height: auto;
+    max-width: 132px;
+    max-height: 60px;
+    object-fit: contain;
+    object-position: center center;
+    display: none;
+}
+
+.team-name {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.side-panel.blue .team-name {
+    color: #2d6cff;
+}
+
+.side-panel.orange .team-name {
+    color: #ff7b2d;
+}
+
+.score-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 62px;
+    height: 50px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.series-pips {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.pip.active.blue {
+    background: #2d6cff;
+    border-color: #2d6cff;
+}
+
+.pip.active.orange {
+    background: #ff7b2d;
+    border-color: #ff7b2d;
+}
+
+#timerCutoutStack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#timerCutout {
+    width: 220px;
+    height: 74px;
+    border-radius: 14px;
+    background: rgba(12, 12, 12, 0.62);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    position: relative;
+}
+
+#timerHole {
+    position: absolute;
+    inset: 10px 16px;
+    border-radius: 10px;
+    background: transparent;
+}
+
+#timerCutout::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+#overlayTimingPanel {
+    min-width: 200px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(12, 12, 12, 0.78);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#overlayTimingPanel.running #overlayTimingValue {
+    color: #2ecc71;
+}
+
+#overlayTimingLabel {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: rgba(255, 255, 255, 0.72);
+    margin-bottom: 4px;
+}
+
+#overlayTimingValue {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+}
+
+.overlay-roster-stack {
+    position: absolute;
+    top: 230px;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.overlay-roster-stack.blue {
+    left: 26px;
+    align-items: flex-start;
+}
+
+.overlay-roster-stack.orange {
+    right: 26px;
+    align-items: flex-end;
+}
+
+.overlay-roster-entry {
+    position: relative;
+    width: 250px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    background: rgba(12, 12, 12, 0.84);
+    border-radius: 10px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.overlay-roster-entry.blue {
+    justify-content: flex-start;
+    padding: 0 18px 0 20px;
+    clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%);
+}
+
+.overlay-roster-entry.orange {
+    justify-content: flex-end;
+    padding: 0 20px 0 18px;
+    clip-path: polygon(8% 50%, 0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.overlay-roster-entry::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+}
+
+.overlay-roster-entry.blue::before {
+    left: 0;
+    background: #2d6cff;
+}
+
+.overlay-roster-entry.orange::before {
+    right: 0;
+    background: #ff7b2d;
+}
+
+.overlay-roster-name {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: auto;
+    max-width: 100%;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: #ffffff;
+}
+
+.overlay-roster-entry.blue .overlay-roster-name {
+    text-align: left;
+}
+
+.overlay-roster-entry.orange .overlay-roster-name {
+    text-align: right;
+}
+
+#errorMessage {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    right: 30px;
+    padding: 18px;
+    border-radius: 12px;
+    background: rgba(120, 0, 0, 0.85);
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="overlayRoot">
+    <div id="overlayBackground"></div>
+
+    <div id="overlayTopStack">
+        <div id="matchMetaBar">
+            <div class="meta-text" id="leagueNameMeta"></div>
+            <div class="meta-divider" id="dividerLeagueWeek"></div>
+            <div class="meta-text" id="weekRoundMeta"></div>
+            <div class="meta-divider" id="dividerWeekSeries"></div>
+            <div class="meta-text" id="seriesInfoMeta"></div>
+        </div>
+
+        <div id="overlayWrap">
+            <div class="side-panel blue">
+                <div class="series-pips" id="bluePips"></div>
+                <div class="team-name-group">
+                    <div class="team-logo-wrap">
+                        <img id="blueLogo" class="team-logo" alt="">
+                    </div>
+                    <div class="team-name" id="blueName">BLUE</div>
+                </div>
+                <div class="score-box" id="blueScore">0</div>
+            </div>
+
+            <div id="timerCutoutStack">
+                <div id="timerCutout">
+                    <div id="timerHole"></div>
+                </div>
+
+                <div id="overlayTimingPanel">
+                    <div id="overlayTimingLabel">Timing Compare</div>
+                    <div id="overlayTimingValue">00:00.0</div>
+                </div>
+            </div>
+
+            <div class="side-panel orange">
+                <div class="score-box" id="orangeScore">0</div>
+                <div class="team-name-group">
+                    <div class="team-name" id="orangeName">ORANGE</div>
+                    <div class="team-logo-wrap">
+                        <img id="orangeLogo" class="team-logo" alt="">
+                    </div>
+                </div>
+                <div class="series-pips" id="orangePips"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay-roster-stack blue" id="blueRosterStack">
+        <div class="overlay-roster-entry blue"><div class="overlay-roster-name" id="blueRosterName1"></div></div>
+        <div class="overlay-roster-entry blue"><div class="overlay-roster-name" id="blueRosterName2"></div></div>
+        <div class="overlay-roster-entry blue"><div class="overlay-roster-name" id="blueRosterName3"></div></div>
+    </div>
+
+    <div class="overlay-roster-stack orange" id="orangeRosterStack">
+        <div class="overlay-roster-entry orange"><div class="overlay-roster-name" id="orangeRosterName1"></div></div>
+        <div class="overlay-roster-entry orange"><div class="overlay-roster-name" id="orangeRosterName2"></div></div>
+        <div class="overlay-roster-entry orange"><div class="overlay-roster-name" id="orangeRosterName3"></div></div>
+    </div>
+
+    <div id="errorMessage"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+function getRoomIdFromPath() {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    const roomIndex = parts.indexOf("room");
+
+    if (roomIndex !== -1 && parts[roomIndex + 1]) {
+        return decodeURIComponent(parts[roomIndex + 1]);
+    }
+
+    return "default-room";
+}
+
+const roomId = getRoomIdFromPath();
+const socket = io();
+
+const scheduledStates = [];
+let nextTimeoutId = null;
+let hasAppliedInitialState = false;
+let latestInstantDisplayInfoVersion = 0;
+let latestInstantFullState = null;
+
+const ROSTER_MAX_FONT_SIZE = 23;
+const ROSTER_MIN_FONT_SIZE = 14;
+
+let timingDisplayRunning = false;
+let timingDisplayStartEpochMs = 0;
+let timingDisplayElapsedMs = 0;
+let timingIntervalId = null;
+
+function clearScheduledStates() {
+    scheduledStates.length = 0;
+
+    if (nextTimeoutId !== null) {
+        clearTimeout(nextTimeoutId);
+        nextTimeoutId = null;
+    }
+}
+
+function showError(message) {
+    const errorEl = document.getElementById("errorMessage");
+    errorEl.textContent = message;
+    errorEl.style.display = "block";
+}
+
+function hideError() {
+    const errorEl = document.getElementById("errorMessage");
+    errorEl.textContent = "";
+    errorEl.style.display = "none";
+}
+
+function formatTimingMs(ms) {
+    const safeMs = Math.max(0, ms);
+    const totalTenths = Math.floor(safeMs / 100);
+    const minutes = Math.floor(totalTenths / 600);
+    const seconds = Math.floor((totalTenths % 600) / 10);
+    const tenths = totalTenths % 10;
+
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
+}
+
+function updateOverlayTimingUI() {
+    const timingPanel = document.getElementById("overlayTimingPanel");
+    const timingValue = document.getElementById("overlayTimingValue");
+
+    let displayMs = timingDisplayElapsedMs;
+
+    if (timingDisplayRunning && timingDisplayStartEpochMs > 0) {
+        displayMs = Date.now() - timingDisplayStartEpochMs;
+    }
+
+    timingValue.textContent = formatTimingMs(displayMs);
+
+    const shouldShow = timingDisplayRunning || displayMs > 0;
+
+    timingPanel.style.display = shouldShow ? "flex" : "none";
+
+    if (timingDisplayRunning) {
+        timingPanel.classList.add("running");
+    } else {
+        timingPanel.classList.remove("running");
+    }
+}
+
+function syncOverlayTimingLoop() {
+    if (timingIntervalId !== null) {
+        clearInterval(timingIntervalId);
+        timingIntervalId = null;
+    }
+
+    updateOverlayTimingUI();
+
+    if (timingDisplayRunning) {
+        timingIntervalId = setInterval(updateOverlayTimingUI, 100);
+    }
+}
+
+function applyTimingStateFromState(gameState) {
+    timingDisplayRunning = !!gameState.timingDisplayRunning;
+    timingDisplayStartEpochMs = Number(gameState.timingDisplayStartEpochMs || 0);
+    timingDisplayElapsedMs = Number(gameState.timingDisplayElapsedMs || 0);
+    syncOverlayTimingLoop();
+}
+
+function applyOverlayBackgroundFromState(gameState) {
+    const backgroundEl = document.getElementById("overlayBackground");
+
+    if (gameState && gameState.overlayImagePath) {
+        backgroundEl.style.backgroundImage = `url("${gameState.overlayImagePath}")`;
+    } else {
+        backgroundEl.style.backgroundImage = "none";
+    }
+}
+
+function applyTeamLogosFromState(gameState) {
+    const blueLogoEl = document.getElementById("blueLogo");
+    const orangeLogoEl = document.getElementById("orangeLogo");
+
+    if (gameState && gameState.blueLogoPath) {
+        blueLogoEl.src = gameState.blueLogoPath;
+        blueLogoEl.style.display = "block";
+    } else {
+        blueLogoEl.removeAttribute("src");
+        blueLogoEl.style.display = "none";
+    }
+
+    if (gameState && gameState.orangeLogoPath) {
+        orangeLogoEl.src = gameState.orangeLogoPath;
+        orangeLogoEl.style.display = "block";
+    } else {
+        orangeLogoEl.removeAttribute("src");
+        orangeLogoEl.style.display = "none";
+    }
+}
+
+function renderPips(containerId, value, teamClass, maxPips, reverse = false) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    const pipStates = [];
+
+    for (let i = 0; i < maxPips; i++) {
+        pipStates.push(i < value);
+    }
+
+    if (reverse) {
+        pipStates.reverse();
+    }
+
+    pipStates.forEach((isActive) => {
+        const pip = document.createElement("div");
+        pip.className = "pip";
+
+        if (isActive) {
+            pip.classList.add("active", teamClass);
+        }
+
+        container.appendChild(pip);
+    });
+}
+
+function applyMatchMetaFromPayload(payload) {
+    const leagueName = (payload.leagueName || "").trim();
+    const weekRound = (payload.weekRound || "").trim();
+    const seriesInfo = (payload.seriesInfo || "").trim();
+
+    const leagueNameEl = document.getElementById("leagueNameMeta");
+    const weekRoundEl = document.getElementById("weekRoundMeta");
+    const seriesInfoEl = document.getElementById("seriesInfoMeta");
+
+    const dividerLeagueWeek = document.getElementById("dividerLeagueWeek");
+    const dividerWeekSeries = document.getElementById("dividerWeekSeries");
+    const metaBar = document.getElementById("matchMetaBar");
+
+    leagueNameEl.textContent = leagueName;
+    weekRoundEl.textContent = weekRound;
+    seriesInfoEl.textContent = seriesInfo;
+
+    const hasLeague = leagueName.length > 0;
+    const hasWeek = weekRound.length > 0;
+    const hasSeries = seriesInfo.length > 0;
+
+    leagueNameEl.style.display = hasLeague ? "block" : "none";
+    weekRoundEl.style.display = hasWeek ? "block" : "none";
+    seriesInfoEl.style.display = hasSeries ? "block" : "none";
+
+    dividerLeagueWeek.style.display = hasLeague && hasWeek ? "block" : "none";
+    dividerWeekSeries.style.display = hasWeek && hasSeries ? "block" : "none";
+
+    const hasAnyMeta = hasLeague || hasWeek || hasSeries;
+    metaBar.style.display = hasAnyMeta ? "flex" : "none";
+}
+
+function applyDisplayInfoFromPayload(payload) {
+    document.getElementById("blueName").textContent = (payload.blueName || "BLUE").toUpperCase();
+    document.getElementById("orangeName").textContent = (payload.orangeName || "ORANGE").toUpperCase();
+    applyMatchMetaFromPayload(payload);
+}
+
+function measureTextWidth(text, element, fontSize) {
+    const canvas = measureTextWidth.canvas || (measureTextWidth.canvas = document.createElement("canvas"));
+    const context = canvas.getContext("2d");
+    const style = window.getComputedStyle(element);
+    const fontWeight = style.fontWeight || "700";
+    const fontFamily = style.fontFamily || "Arial, sans-serif";
+    context.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+    return context.measureText(text).width;
+}
+
+function fitRosterNameText(element) {
+    if (!element) return;
+
+    const text = (element.textContent || "").trim();
+    element.style.fontSize = `${ROSTER_MAX_FONT_SIZE}px`;
+
+    if (!text) return;
+
+    const parent = element.parentElement;
+    if (!parent) return;
+
+    const parentStyle = window.getComputedStyle(parent);
+    const availableWidth =
+        parent.clientWidth -
+        parseFloat(parentStyle.paddingLeft || "0") -
+        parseFloat(parentStyle.paddingRight || "0") -
+        2;
+
+    if (availableWidth <= 0) return;
+
+    let fontSize = ROSTER_MAX_FONT_SIZE;
+
+    while (fontSize > ROSTER_MIN_FONT_SIZE && measureTextWidth(text, element, fontSize) > availableWidth) {
+        fontSize -= 1;
+    }
+
+    element.style.fontSize = `${fontSize}px`;
+}
+
+function fitAllRosterNames() {
+    [
+        "blueRosterName1",
+        "blueRosterName2",
+        "blueRosterName3",
+        "orangeRosterName1",
+        "orangeRosterName2",
+        "orangeRosterName3"
+    ].forEach((id) => {
+        fitRosterNameText(document.getElementById(id));
+    });
+}
+
+function setRosterStackVisibility(stackId, visibleCount) {
+    const stack = document.getElementById(stackId);
+    const entries = stack.querySelectorAll(".overlay-roster-entry");
+
+    let hasAnyVisible = false;
+
+    entries.forEach((entry, index) => {
+        if (index < visibleCount) {
+            entry.style.display = "flex";
+            hasAnyVisible = true;
+        } else {
+            entry.style.display = "none";
+        }
+    });
+
+    stack.style.display = hasAnyVisible ? "flex" : "none";
+}
+
+function applyRosterStateFromState(gameState) {
+    const blueRoster = Array.isArray(gameState.blueRoster) ? gameState.blueRoster : ["", "", ""];
+    const orangeRoster = Array.isArray(gameState.orangeRoster) ? gameState.orangeRoster : ["", "", ""];
+
+    const blueNames = [
+        (blueRoster[0] || "").trim(),
+        (blueRoster[1] || "").trim(),
+        (blueRoster[2] || "").trim()
+    ];
+
+    const orangeNames = [
+        (orangeRoster[0] || "").trim(),
+        (orangeRoster[1] || "").trim(),
+        (orangeRoster[2] || "").trim()
+    ];
+
+    document.getElementById("blueRosterName1").textContent = blueNames[0];
+    document.getElementById("blueRosterName2").textContent = blueNames[1];
+    document.getElementById("blueRosterName3").textContent = blueNames[2];
+
+    document.getElementById("orangeRosterName1").textContent = orangeNames[0];
+    document.getElementById("orangeRosterName2").textContent = orangeNames[1];
+    document.getElementById("orangeRosterName3").textContent = orangeNames[2];
+
+    const blueVisibleCount = blueNames.filter(name => name !== "").length;
+    const orangeVisibleCount = orangeNames.filter(name => name !== "").length;
+
+    setRosterStackVisibility("blueRosterStack", blueVisibleCount);
+    setRosterStackVisibility("orangeRosterStack", orangeVisibleCount);
+
+    requestAnimationFrame(() => {
+        fitAllRosterNames();
+    });
+}
+
+function applyScoreStateFromState(gameState) {
+    document.getElementById("blueScore").textContent = gameState.blueScore;
+    document.getElementById("orangeScore").textContent = gameState.orangeScore;
+
+    renderPips("bluePips", gameState.blueSeries, "blue", gameState.seriesWinsRequired, false);
+    renderPips("orangePips", gameState.orangeSeries, "orange", gameState.seriesWinsRequired, true);
+
+    applyOverlayBackgroundFromState(gameState);
+    applyTeamLogosFromState(gameState);
+    applyRosterStateFromState(gameState);
+    applyTimingStateFromState(gameState);
+}
+
+function applyStateToOverlay(gameState) {
+    applyScoreStateFromState(gameState);
+
+    if ((gameState.displayInfoVersion || 0) >= latestInstantDisplayInfoVersion) {
+        applyDisplayInfoFromPayload(gameState);
+    }
+}
+
+function purgeObsoleteQueuedStates() {
+    if (!latestInstantFullState) {
+        return;
+    }
+
+    scheduledStates.forEach((item) => {
+        if ((item.state.displayInfoVersion || 0) < latestInstantDisplayInfoVersion) {
+            item.state.leagueName = document.getElementById("leagueNameMeta").textContent;
+            item.state.weekRound = document.getElementById("weekRoundMeta").textContent;
+            item.state.seriesInfo = document.getElementById("seriesInfoMeta").textContent;
+            item.state.blueName = document.getElementById("blueName").textContent;
+            item.state.orangeName = document.getElementById("orangeName").textContent;
+            item.state.seriesType = latestInstantFullState.seriesType;
+            item.state.seriesWinsRequired = latestInstantFullState.seriesWinsRequired;
+            item.state.blueScore = latestInstantFullState.blueScore;
+            item.state.orangeScore = latestInstantFullState.orangeScore;
+            item.state.blueSeries = latestInstantFullState.blueSeries;
+            item.state.orangeSeries = latestInstantFullState.orangeSeries;
+            item.state.overlayImagePath = latestInstantFullState.overlayImagePath;
+            item.state.blueLogoPath = latestInstantFullState.blueLogoPath;
+            item.state.orangeLogoPath = latestInstantFullState.orangeLogoPath;
+            item.state.blueRoster = Array.isArray(latestInstantFullState.blueRoster) ? [...latestInstantFullState.blueRoster] : ["", "", ""];
+            item.state.blueSubs = Array.isArray(latestInstantFullState.blueSubs) ? [...latestInstantFullState.blueSubs] : ["", ""];
+            item.state.orangeRoster = Array.isArray(latestInstantFullState.orangeRoster) ? [...latestInstantFullState.orangeRoster] : ["", "", ""];
+            item.state.orangeSubs = Array.isArray(latestInstantFullState.orangeSubs) ? [...latestInstantFullState.orangeSubs] : ["", ""];
+            item.state.timingDisplayRunning = latestInstantFullState.timingDisplayRunning;
+            item.state.timingDisplayStartEpochMs = latestInstantFullState.timingDisplayStartEpochMs;
+            item.state.timingDisplayElapsedMs = latestInstantFullState.timingDisplayElapsedMs;
+            item.state.displayInfoVersion = latestInstantDisplayInfoVersion;
+            item.state.lastInstantDisplayInfoVersion = latestInstantDisplayInfoVersion;
+        }
+    });
+}
+
+function scheduleNextStateApplication() {
+    if (nextTimeoutId !== null) {
+        clearTimeout(nextTimeoutId);
+        nextTimeoutId = null;
+    }
+
+    if (scheduledStates.length === 0) {
+        return;
+    }
+
+    const now = Date.now();
+    const nextItem = scheduledStates[0];
+    const waitMs = Math.max(0, nextItem.targetTime - now);
+
+    nextTimeoutId = setTimeout(() => {
+        nextTimeoutId = null;
+
+        const currentTime = Date.now();
+
+        while (scheduledStates.length > 0 && scheduledStates[0].targetTime <= currentTime) {
+            const readyItem = scheduledStates.shift();
+            applyStateToOverlay(readyItem.state);
+        }
+
+        scheduleNextStateApplication();
+    }, waitMs);
+}
+
+function scheduleAuthoritativeState(payload) {
+    const delayMs = Math.max(0, (payload.overlayDelaySeconds || 0) * 1000);
+
+    if (delayMs === 0) {
+        applyStateToOverlay(payload);
+        return;
+    }
+
+    scheduledStates.push({
+        state: { ...payload },
+        targetTime: Date.now() + delayMs
+    });
+
+    scheduleNextStateApplication();
+}
+
+socket.on("connect", () => {
+    hideError();
+    socket.emit("joinRoom", {
+        roomId: roomId,
+        role: "overlay"
+    });
+});
+
+socket.on("joinAccepted", (payload) => {
+    hideError();
+    clearScheduledStates();
+
+    applyDisplayInfoFromPayload(payload.state);
+    applyScoreStateFromState(payload.state);
+    latestInstantDisplayInfoVersion = payload.state.lastInstantDisplayInfoVersion || 0;
+    latestInstantFullState = { ...payload.state };
+    hasAppliedInitialState = true;
+});
+
+socket.on("joinError", (payload) => {
+    showError(payload && payload.message ? payload.message : "Could not join overlay room.");
+});
+
+socket.on("instantOverlayState", (payload) => {
+    latestInstantDisplayInfoVersion = payload.lastInstantDisplayInfoVersion || payload.displayInfoVersion || 0;
+    latestInstantFullState = { ...payload };
+    applyDisplayInfoFromPayload(payload);
+    applyScoreStateFromState(payload);
+    purgeObsoleteQueuedStates();
+});
+
+socket.on("overlayQueueReset", (payload) => {
+    clearScheduledStates();
+    latestInstantFullState = { ...payload };
+    latestInstantDisplayInfoVersion = Math.max(
+        latestInstantDisplayInfoVersion,
+        payload.lastInstantDisplayInfoVersion || payload.displayInfoVersion || 0
+    );
+
+    if (!hasAppliedInitialState) {
+        applyDisplayInfoFromPayload(payload);
+        applyScoreStateFromState(payload);
+        hasAppliedInitialState = true;
+        return;
+    }
+
+    scheduleAuthoritativeState(payload);
+});
+
+socket.on("stateUpdate", (gameState) => {
+    if (!hasAppliedInitialState) {
+        applyDisplayInfoFromPayload(gameState);
+        applyScoreStateFromState(gameState);
+        latestInstantDisplayInfoVersion = gameState.lastInstantDisplayInfoVersion || 0;
+        latestInstantFullState = { ...gameState };
+        hasAppliedInitialState = true;
+        return;
+    }
+
+    const delayMs = Math.max(0, (gameState.overlayDelaySeconds || 0) * 1000);
+    const receivedAt = Date.now();
+    const targetTime = receivedAt + delayMs;
+
+    scheduledStates.push({
+        state: { ...gameState },
+        targetTime: targetTime
+    });
+
+    scheduledStates.sort((a, b) => a.targetTime - b.targetTime);
+    scheduleNextStateApplication();
+});
+
+window.addEventListener("resize", () => {
+    requestAnimationFrame(() => {
+        fitAllRosterNames();
+    });
+});
+</script>
+
+</body>
+</html>

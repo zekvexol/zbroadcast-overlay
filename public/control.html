@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Score Control</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 26px;
+    background: #121212;
+    color: #f5f5f5;
+    font-family: Arial, sans-serif;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+h1 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.topbar-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.topbar-buttons button {
+    width: auto;
+    min-width: 108px;
+    margin-bottom: 0;
+    border: 2px solid #888;
+    background: #1f1f1f;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 9px 12px;
+    font-size: 14px;
+}
+
+.topbar-buttons button:hover {
+    background: #2b2b2b;
+}
+
+.topbar-room-info {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #a7a7a7;
+}
+
+.top-score-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: start;
+    margin-bottom: 18px;
+}
+
+.top-team-slot {
+    width: 100%;
+    min-width: 0;
+}
+
+.top-team-slot.left {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.top-team-slot.right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.top-team-panel {
+    width: 100%;
+    max-width: 640px;
+    padding: 14px;
+    border-radius: 10px;
+}
+
+.top-team-panel .section-title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.top-team-panel.blue .section-title {
+    color: #2d6cff;
+}
+
+.top-team-panel.orange .section-title {
+    color: #ff7b2d;
+}
+
+.blue {
+    border: 2px solid #2d6cff;
+}
+
+.orange {
+    border: 2px solid #ff7b2d;
+}
+
+.current-game-timing-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.current-game-panel {
+    width: 108px;
+    min-width: 108px;
+    padding: 16px 12px 14px 12px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #181818;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.current-game-label {
+    font-size: 12px;
+    color: #bfbfbf;
+    margin-bottom: 4px;
+    text-align: center;
+    width: 100%;
+}
+
+.current-game-box {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 144px;
+    font-weight: bold;
+    color: #2ecc71;
+    line-height: 0.85;
+}
+
+.timing-panel {
+    width: 188px;
+    min-width: 188px;
+    padding: 11px 12px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #181818;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.timing-panel-label {
+    font-size: 12px;
+    color: #bfbfbf;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+}
+
+.timing-panel-value {
+    font-size: 40px;
+    font-weight: 700;
+    color: #f5f5f5;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.timing-panel.running .timing-panel-value {
+    color: #2ecc71;
+}
+
+.bottom-info-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 18px;
+    align-items: start;
+}
+
+.series-config-panel {
+    width: 100%;
+    padding: 16px 18px 14px 18px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #181818;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.series-config-panel.unsaved {
+    border: 2px solid #e74c3c !important;
+}
+
+.series-config-panel.unsaved::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.25);
+    pointer-events: none;
+}
+
+.meta-top-grid {
+    display: grid;
+    grid-template-columns: 320px 210px 132px 1fr 106px;
+    gap: 10px;
+    align-items: start;
+    margin-bottom: 12px;
+}
+
+.meta-spacer {
+    min-width: 0;
+}
+
+.meta-field label,
+.series-select-field label {
+    display: block;
+    font-size: 12px;
+    color: #bfbfbf;
+    margin-bottom: 5px;
+}
+
+.meta-field input {
+    margin-bottom: 0;
+}
+
+.meta-field.short-input input {
+    max-width: 100%;
+}
+
+.series-select-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.series-select-field select {
+    width: 100%;
+    padding: 9px 10px;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+}
+
+.series-config-status {
+    font-size: 12px;
+    color: #aaaaaa;
+    text-align: left;
+    white-space: nowrap;
+    margin-top: 7px;
+}
+
+.team-settings-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+}
+
+.team-settings-card {
+    background: #151515;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.team-settings-card.blue {
+    border: 2px solid #2d6cff;
+}
+
+.team-settings-card.orange {
+    border: 2px solid #ff7b2d;
+}
+
+.team-settings-header {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+.team-settings-header.blue {
+    color: #2d6cff;
+}
+
+.team-settings-header.orange {
+    color: #ff7b2d;
+}
+
+.team-settings-inner {
+    display: grid;
+    gap: 10px;
+}
+
+.team-name-field input {
+    max-width: 220px;
+}
+
+.logo-card {
+    position: relative;
+    min-height: 108px;
+    padding: 9px 220px 9px 9px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.logo-card-content {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+
+.logo-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #dddddd;
+    margin-bottom: 7px;
+}
+
+.logo-card-buttons {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.logo-card-buttons button {
+    width: auto;
+    min-width: 80px;
+    margin-bottom: 0;
+    border: 2px solid #888;
+    padding: 9px 10px;
+    font-size: 13px;
+}
+
+.logo-card-buttons button:hover {
+    background: #2b2b2b;
+}
+
+.logo-card-status {
+    margin-top: 7px;
+    font-size: 11px;
+    color: #aaaaaa;
+}
+
+.logo-preview {
+    position: absolute;
+    top: 6px;
+    right: 9px;
+    bottom: 6px;
+    width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.logo-preview img {
+    width: auto;
+    height: auto;
+    max-width: 200px;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    display: none;
+}
+
+.logo-preview-placeholder {
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.roster-team-card {
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.roster-team-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.roster-team-title.blue {
+    color: #2d6cff;
+}
+
+.roster-team-title.orange {
+    color: #ff7b2d;
+}
+
+.roster-subtitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: #cfcfcf;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.roster-input-stack {
+    display: grid;
+    gap: 7px;
+}
+
+.roster-input {
+    margin-bottom: 0;
+}
+
+.roster-input.clickable {
+    cursor: pointer;
+}
+
+.roster-input.selected-sub {
+    border: 2px solid #f1c40f !important;
+    box-shadow: 0 0 0 1px rgba(241, 196, 15, 0.25);
+}
+
+.roster-swap-note {
+    margin-top: 9px;
+    font-size: 11px;
+    color: #9d9d9d;
+    line-height: 1.3;
+}
+
+.meta-action-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.meta-action-row button {
+    width: auto;
+    min-width: 138px;
+    margin-bottom: 0;
+    border: 2px solid #888;
+}
+
+.meta-action-row button:hover {
+    background: #2b2b2b;
+}
+
+.section-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.settings-subtitle {
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: 8px;
+    margin-bottom: 9px;
+    color: #dddddd;
+}
+
+.settings-divider {
+    height: 1px;
+    background: #333;
+    margin: 14px 0;
+}
+
+input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px;
+    margin-bottom: 12px;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+}
+
+input[type="text"] {
+    text-transform: uppercase;
+}
+
+button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    margin-bottom: 9px;
+    font-size: 14px;
+    background: #1f1f1f;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.action-btn {
+    border: 2px solid #888;
+}
+
+.action-btn:hover {
+    background: #2a2a2a;
+}
+
+.goal-action-btn {
+    border: 2px solid #00c2a8;
+}
+
+.goal-action-btn:hover {
+    background: #113632;
+}
+
+.win-action-btn {
+    border: 2px solid #f1c40f;
+}
+
+.win-action-btn:hover {
+    background: #3c3310;
+}
+
+.undo-action-btn {
+    border: 2px solid #8e7dff !important;
+}
+
+.undo-action-btn:hover {
+    background: #261f4d !important;
+}
+
+.swap-action-btn {
+    border: 2px solid #4da3ff !important;
+}
+
+.swap-action-btn:hover {
+    background: #17324d !important;
+}
+
+.stat-row {
+    display: grid;
+    grid-template-columns: 1fr 52px 66px;
+    gap: 7px;
+    align-items: stretch;
+    margin-bottom: 9px;
+}
+
+.stat-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    font-size: 21px;
+    font-weight: bold;
+    min-height: 72px;
+    user-select: none;
+}
+
+.stat-buttons {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 7px;
+}
+
+.stat-plus,
+.stat-minus {
+    min-height: 32px;
+    margin-bottom: 0;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 0;
+}
+
+.stat-plus {
+    border: 2px solid #2ecc71;
+}
+
+.stat-plus:hover {
+    background: #1b3526;
+}
+
+.stat-minus {
+    border: 2px solid #e74c3c;
+}
+
+.stat-minus:hover {
+    background: #351b1b;
+}
+
+.stat-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    min-height: 72px;
+    font-size: 36px;
+    font-weight: bold;
+    user-select: none;
+}
+
+.team-action-button {
+    margin-bottom: 10px;
+}
+
+.center-controls {
+    margin-top: 16px;
+    padding-top: 18px;
+    border-top: 1px solid #333;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.center-controls button {
+    width: auto;
+    min-width: 150px;
+    margin-bottom: 0;
+    border: 2px solid #888;
+}
+
+.center-controls button:hover {
+    background: #2b2b2b;
+}
+
+.reset-danger {
+    border: 2px solid #e74c3c !important;
+}
+
+.reset-danger:hover {
+    background: #351b1b !important;
+}
+
+.asset-panel {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #333;
+}
+
+.asset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.asset-row button {
+    width: auto;
+    min-width: 165px;
+    margin-bottom: 0;
+    border: 2px solid #888;
+}
+
+.asset-row button:hover {
+    background: #2b2b2b;
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.asset-status {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #7fd68a;
+}
+
+.history-panel {
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #181818;
+    padding: 16px;
+    position: sticky;
+    top: 26px;
+}
+
+.history-panel .section-title {
+    font-size: 24px;
+    margin-bottom: 14px;
+}
+
+.history-list {
+    max-height: 72vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding-right: 6px;
+}
+
+.history-empty {
+    color: #888888;
+    font-size: 18px;
+}
+
+.history-goal {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 3px 0;
+}
+
+.history-goal.blue {
+    color: #2d6cff;
+    text-align: left;
+}
+
+.history-goal.orange {
+    color: #ff7b2d;
+    text-align: right;
+}
+
+.history-final-block {
+    margin: 12px 0 14px 0;
+    padding: 8px 0;
+}
+
+.history-final-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #aaaaaa;
+    font-size: 13px;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+}
+
+.history-final-header::before,
+.history-final-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #666666;
+}
+
+.history-final-winner {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.history-final-winner.blue {
+    color: #2d6cff;
+}
+
+.history-final-winner.orange {
+    color: #ff7b2d;
+}
+
+.history-final-score {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.history-blue-score {
+    color: #2d6cff;
+}
+
+.history-orange-score {
+    color: #ff7b2d;
+}
+
+.hotkey-panel {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 470px;
+    max-height: 78vh;
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #181818;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+}
+
+.hotkey-panel.open {
+    display: block;
+}
+
+.hotkey-panel.unsaved {
+    border: 2px solid #e74c3c !important;
+}
+
+.hotkey-panel.unsaved::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.25);
+    pointer-events: none;
+}
+
+.general-settings-row {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 12px;
+    align-items: center;
+}
+
+.general-settings-row label {
+    font-size: 14px;
+    color: #cccccc;
+}
+
+.general-settings-row input {
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.timing-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 9px;
+}
+
+.timing-controls button {
+    width: auto;
+    min-width: 125px;
+    margin-bottom: 0;
+    border: 2px solid #888;
+}
+
+.timing-controls button:hover {
+    background: #2b2b2b;
+}
+
+.timing-status-line {
+    margin-top: 9px;
+    font-size: 13px;
+    color: #aaaaaa;
+}
+
+.hotkey-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.hotkey-row {
+    display: grid;
+    grid-template-columns: 1fr 84px;
+    gap: 12px;
+    align-items: center;
+}
+
+.hotkey-row label {
+    font-size: 14px;
+    color: #cccccc;
+}
+
+.hotkey-row input {
+    margin-bottom: 0;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.hotkey-buttons {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.hotkey-buttons button {
+    width: auto;
+    min-width: 145px;
+    margin-bottom: 0;
+    border: 2px solid #888;
+}
+
+.hotkey-buttons button:hover {
+    background: #2b2b2b;
+}
+
+.hotkey-note {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #aaaaaa;
+}
+
+.status-text {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #7fd68a;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <div>
+        <h1 id="pageTitle">Score Control</h1>
+        <div class="topbar-room-info" id="roomInfoLine"></div>
+    </div>
+
+    <div class="topbar-buttons">
+        <button id="copyOverlayUrlBtn" onclick="copyOverlayUrl()">Copy Overlay URL</button>
+        <button id="hotkeyToggleBtn" onclick="toggleHotkeys()">⚙ Settings</button>
+    </div>
+
+    <div class="hotkey-panel" id="hotkeyPanel">
+        <div class="section-title">Settings</div>
+
+        <div class="settings-subtitle">General</div>
+
+        <div class="general-settings-row">
+            <label for="overlayDelayInput">Overlay Delay (seconds)</label>
+            <input type="number" id="overlayDelayInput" min="0" step="1" value="0">
+        </div>
+
+        <div class="timing-controls">
+            <button onclick="startTimingDisplay()">Start Timing</button>
+            <button onclick="stopTimingDisplay()">Stop Timing</button>
+            <button onclick="resetTimingDisplay()">Reset Timing</button>
+        </div>
+
+        <div class="timing-status-line" id="timingSettingsStatus">
+            Timing display idle.
+        </div>
+
+        <div class="settings-divider"></div>
+
+        <div class="settings-subtitle">Hotkeys</div>
+
+        <div class="hotkey-list">
+            <div class="hotkey-row">
+                <label for="hkBlueGoal">Blue Goal</label>
+                <input type="text" id="hkBlueGoal" maxlength="1">
+            </div>
+
+            <div class="hotkey-row">
+                <label for="hkOrangeGoal">Orange Goal</label>
+                <input type="text" id="hkOrangeGoal" maxlength="1">
+            </div>
+
+            <div class="hotkey-row">
+                <label for="hkBlueWins">Blue Wins</label>
+                <input type="text" id="hkBlueWins" maxlength="1">
+            </div>
+
+            <div class="hotkey-row">
+                <label for="hkOrangeWins">Orange Wins</label>
+                <input type="text" id="hkOrangeWins" maxlength="1">
+            </div>
+
+            <div class="hotkey-row">
+                <label for="hkResetGame">Reset Game</label>
+                <input type="text" id="hkResetGame" maxlength="1">
+            </div>
+
+            <div class="hotkey-row">
+                <label for="hkResetSeries">Reset Series</label>
+                <input type="text" id="hkResetSeries" maxlength="1">
+            </div>
+
+            <div class="hotkey-row">
+                <label for="hkFullReset">Full Reset</label>
+                <input type="text" id="hkFullReset" maxlength="1">
+            </div>
+        </div>
+
+        <div class="hotkey-buttons">
+            <button onclick="saveSettings()">Save Settings</button>
+            <button onclick="resetSettingsToDefault()">Reset to Default</button>
+        </div>
+
+        <div class="hotkey-note">
+            Hotkeys do not trigger while typing in a text box.
+        </div>
+
+        <div class="status-text" id="hotkeyStatus"></div>
+    </div>
+</div>
+
+<div class="top-score-row">
+    <div class="top-team-slot left">
+        <div class="top-team-panel blue">
+            <div class="section-title" id="blueTeamPanelTitle">BLUE</div>
+
+            <div class="stat-row">
+                <div class="stat-label">BLUE SCORE</div>
+
+                <div class="stat-buttons">
+                    <button class="stat-plus" onclick="blueGoal()">+</button>
+                    <button class="stat-minus" onclick="undoBlueGoal()">-</button>
+                </div>
+
+                <div class="stat-display" id="blueScoreDisplay">0</div>
+            </div>
+
+            <button class="action-btn goal-action-btn team-action-button" onclick="blueGoal()">BLUE GOAL</button>
+
+            <div class="stat-row">
+                <div class="stat-label">BLUE SERIES</div>
+
+                <div class="stat-buttons">
+                    <button class="stat-plus" onclick="blueSeriesWin()">+</button>
+                    <button class="stat-minus" onclick="undoBlueSeries()">-</button>
+                </div>
+
+                <div class="stat-display" id="blueSeriesDisplay">0</div>
+            </div>
+
+            <button class="action-btn win-action-btn" onclick="blueWins()">BLUE WINS</button>
+        </div>
+    </div>
+
+    <div class="current-game-timing-stack">
+        <div class="current-game-panel">
+            <div class="current-game-label">Current Game</div>
+            <div class="current-game-box" id="currentGameDisplay">1</div>
+        </div>
+
+        <div class="timing-panel" id="timingPanel">
+            <div class="timing-panel-label">Timing Compare</div>
+            <div class="timing-panel-value" id="timingDisplayValue">00:00.0</div>
+        </div>
+    </div>
+
+    <div class="top-team-slot right">
+        <div class="top-team-panel orange">
+            <div class="section-title" id="orangeTeamPanelTitle">ORANGE</div>
+
+            <div class="stat-row">
+                <div class="stat-label">ORANGE SCORE</div>
+
+                <div class="stat-buttons">
+                    <button class="stat-plus" onclick="orangeGoal()">+</button>
+                    <button class="stat-minus" onclick="undoOrangeGoal()">-</button>
+                </div>
+
+                <div class="stat-display" id="orangeScoreDisplay">0</div>
+            </div>
+
+            <button class="action-btn goal-action-btn team-action-button" onclick="orangeGoal()">ORANGE GOAL</button>
+
+            <div class="stat-row">
+                <div class="stat-label">ORANGE SERIES</div>
+
+                <div class="stat-buttons">
+                    <button class="stat-plus" onclick="orangeSeriesWin()">+</button>
+                    <button class="stat-minus" onclick="undoOrangeSeries()">-</button>
+                </div>
+
+                <div class="stat-display" id="orangeSeriesDisplay">0</div>
+            </div>
+
+            <button class="action-btn win-action-btn" onclick="orangeWins()">ORANGE WINS</button>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-info-layout">
+    <div class="series-config-panel" id="seriesConfigPanel">
+        <div class="meta-top-grid">
+            <div class="meta-field short-input">
+                <label for="leagueNameInput">Tournament Name</label>
+                <input type="text" id="leagueNameInput" placeholder="TOURNAMENT NAME">
+            </div>
+
+            <div class="meta-field short-input">
+                <label for="seriesInfoInput">Series Info</label>
+                <input type="text" id="seriesInfoInput" placeholder="DIVISION / SEASON / ETC">
+            </div>
+
+            <div class="meta-field short-input">
+                <label for="weekRoundInput">Week / Round</label>
+                <input type="text" id="weekRoundInput" placeholder="WEEK / ROUND">
+            </div>
+
+            <div class="meta-spacer"></div>
+
+            <div class="series-select-field">
+                <label for="seriesTypeSelect">Series Length</label>
+                <select id="seriesTypeSelect">
+                    <option value="Bo1">Bo1</option>
+                    <option value="Bo2">Bo2</option>
+                    <option value="Bo3">Bo3</option>
+                    <option value="Bo5">Bo5</option>
+                    <option value="Bo7">Bo7</option>
+                </select>
+                <div class="series-config-status" id="seriesConfigStatus">First to 3</div>
+            </div>
+        </div>
+
+        <div class="team-settings-row">
+            <div class="team-settings-card blue">
+                <div class="team-settings-header blue">Blue Team Settings</div>
+
+                <div class="team-settings-inner">
+                    <div class="meta-field team-name-field">
+                        <label for="blueNameInput">Blue Team Name</label>
+                        <input type="text" id="blueNameInput" placeholder="Blue Team Name">
+                    </div>
+
+                    <div class="logo-card">
+                        <div class="logo-card-content">
+                            <div class="logo-card-title">Blue Logo</div>
+                            <div class="logo-card-buttons">
+                                <button onclick="document.getElementById('blueLogoInput').click()">Upload</button>
+                                <button onclick="clearBlueLogo()">Clear</button>
+                            </div>
+                            <div class="logo-card-status" id="blueLogoStatus">No logo loaded.</div>
+                        </div>
+
+                        <div class="logo-preview">
+                            <img id="blueLogoPreview" alt="">
+                            <div class="logo-preview-placeholder" id="blueLogoPreviewPlaceholder">No Logo</div>
+                        </div>
+                    </div>
+
+                    <div class="roster-team-card">
+                        <div class="roster-team-title blue">Blue Roster</div>
+
+                        <div class="roster-subtitle">Active Players</div>
+                        <div class="roster-input-stack">
+                            <input type="text" id="blueRoster1" class="roster-input clickable" placeholder="Blue Player 1">
+                            <input type="text" id="blueRoster2" class="roster-input clickable" placeholder="Blue Player 2">
+                            <input type="text" id="blueRoster3" class="roster-input clickable" placeholder="Blue Player 3">
+                        </div>
+
+                        <div class="roster-subtitle" style="margin-top: 12px;">Subs</div>
+                        <div class="roster-input-stack">
+                            <input type="text" id="blueSub1" class="roster-input clickable" placeholder="Blue Sub 1">
+                            <input type="text" id="blueSub2" class="roster-input clickable" placeholder="Blue Sub 2">
+                        </div>
+
+                        <div class="roster-swap-note">
+                            Click a sub, then click an active player to swap them.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-settings-card orange">
+                <div class="team-settings-header orange">Orange Team Settings</div>
+
+                <div class="team-settings-inner">
+                    <div class="meta-field team-name-field">
+                        <label for="orangeNameInput">Orange Team Name</label>
+                        <input type="text" id="orangeNameInput" placeholder="Orange Team Name">
+                    </div>
+
+                    <div class="logo-card">
+                        <div class="logo-card-content">
+                            <div class="logo-card-title">Orange Logo</div>
+                            <div class="logo-card-buttons">
+                                <button onclick="document.getElementById('orangeLogoInput').click()">Upload</button>
+                                <button onclick="clearOrangeLogo()">Clear</button>
+                            </div>
+                            <div class="logo-card-status" id="orangeLogoStatus">No logo loaded.</div>
+                        </div>
+
+                        <div class="logo-preview">
+                            <img id="orangeLogoPreview" alt="">
+                            <div class="logo-preview-placeholder" id="orangeLogoPreviewPlaceholder">No Logo</div>
+                        </div>
+                    </div>
+
+                    <div class="roster-team-card">
+                        <div class="roster-team-title orange">Orange Roster</div>
+
+                        <div class="roster-subtitle">Active Players</div>
+                        <div class="roster-input-stack">
+                            <input type="text" id="orangeRoster1" class="roster-input clickable" placeholder="Orange Player 1">
+                            <input type="text" id="orangeRoster2" class="roster-input clickable" placeholder="Orange Player 2">
+                            <input type="text" id="orangeRoster3" class="roster-input clickable" placeholder="Orange Player 3">
+                        </div>
+
+                        <div class="roster-subtitle" style="margin-top: 12px;">Subs</div>
+                        <div class="roster-input-stack">
+                            <input type="text" id="orangeSub1" class="roster-input clickable" placeholder="Orange Sub 1">
+                            <input type="text" id="orangeSub2" class="roster-input clickable" placeholder="Orange Sub 2">
+                        </div>
+
+                        <div class="roster-swap-note">
+                            Click a sub, then click an active player to swap them.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="meta-action-row">
+            <button id="queueMatchInfoBtn" onclick="queueMatchInfo()">Queue Match Info</button>
+            <button id="instantMatchInfoBtn" onclick="instantMatchInfo()">Instant Match Info</button>
+        </div>
+
+        <div class="center-controls">
+            <button class="undo-action-btn" onclick="undoLastAction()">Undo Last Action</button>
+            <button class="swap-action-btn" onclick="swapTeams()">Swap Teams</button>
+            <button onclick="resetGame()">Reset Game</button>
+            <button onclick="resetSeries()">Reset Series</button>
+            <button class="reset-danger" onclick="fullReset()">Full Reset (New Match)</button>
+        </div>
+
+        <div class="asset-panel">
+            <div class="section-title">Overlay Asset</div>
+
+            <div class="asset-row">
+                <button onclick="document.getElementById('overlayFileInput').click()">Upload Overlay Image</button>
+                <button onclick="clearOverlayImage()">Clear Overlay Image</button>
+            </div>
+
+            <input class="hidden-file-input" type="file" id="overlayFileInput" accept="image/png">
+            <input class="hidden-file-input" type="file" id="blueLogoInput" accept="image/png">
+            <input class="hidden-file-input" type="file" id="orangeLogoInput" accept="image/png">
+
+            <div class="asset-status" id="overlayAssetStatus"></div>
+        </div>
+    </div>
+
+    <div class="history-panel">
+        <div class="section-title">History</div>
+        <div class="history-list" id="historyList">
+            <div class="history-empty">No history yet.</div>
+        </div>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+function getRoomIdFromPath() {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    const roomIndex = parts.indexOf("room");
+
+    if (roomIndex !== -1 && parts[roomIndex + 1]) {
+        return decodeURIComponent(parts[roomIndex + 1]);
+    }
+
+    return "default-room";
+}
+
+const roomId = getRoomIdFromPath();
+const overlayUrl = `${window.location.origin}/room/${encodeURIComponent(roomId)}/overlay`;
+
+const socket = io();
+
+const defaultSettings = {
+    overlayDelaySeconds: 0,
+    hotkeys: {
+        blueGoal: "1",
+        orangeGoal: "2",
+        blueWins: "A",
+        orangeWins: "S",
+        resetGame: "R",
+        resetSeries: "T",
+        fullReset: "Y"
+    }
+};
+
+let overlayDelaySeconds = defaultSettings.overlayDelaySeconds;
+let hotkeys = { ...defaultSettings.hotkeys };
+let latestState = null;
+let hasUnsavedSettingsChanges = false;
+let isSyncingFromState = false;
+let liveDisplayInfoSnapshot = null;
+
+let pendingBlueLogoPath = "";
+let pendingOrangeLogoPath = "";
+
+let selectedSwapTarget = null;
+
+let timingDisplayRunning = false;
+let timingDisplayStartEpochMs = 0;
+let timingDisplayElapsedMs = 0;
+let timingIntervalId = null;
+
+function getAdminKeyStorageKey() {
+    return `adminKey:${roomId}`;
+}
+
+function getStoredAdminKey() {
+    return sessionStorage.getItem(getAdminKeyStorageKey()) || "";
+}
+
+function storeAdminKey(value) {
+    sessionStorage.setItem(getAdminKeyStorageKey(), value);
+}
+
+function clearStoredAdminKey() {
+    sessionStorage.removeItem(getAdminKeyStorageKey());
+}
+
+function promptForAdminKey() {
+    const entered = window.prompt(`Enter admin password for room "${roomId}"`, "") || "";
+
+    if (!entered) {
+        alert("An admin password is required for the control page.");
+    }
+
+    return entered;
+}
+
+function ensureAdminKey() {
+    let current = getStoredAdminKey();
+
+    while (!current) {
+        current = promptForAdminKey();
+
+        if (!current) {
+            continue;
+        }
+
+        storeAdminKey(current);
+    }
+
+    return current;
+}
+
+function joinRoomAsAdmin() {
+    const adminKey = ensureAdminKey();
+
+    socket.emit("joinRoom", {
+        roomId: roomId,
+        role: "admin",
+        adminKey: adminKey
+    });
+}
+
+function copyOverlayUrl() {
+    navigator.clipboard.writeText(overlayUrl)
+        .then(() => {
+            showHotkeyStatus("Overlay URL copied.");
+        })
+        .catch(() => {
+            showHotkeyStatus("Could not copy overlay URL.");
+        });
+}
+
+function toggleHotkeys() {
+    document.getElementById("hotkeyPanel").classList.toggle("open");
+}
+
+function closeHotkeys() {
+    document.getElementById("hotkeyPanel").classList.remove("open");
+}
+
+function setUnsavedSettingsState(isUnsaved) {
+    hasUnsavedSettingsChanges = isUnsaved;
+
+    const settingsPanel = document.getElementById("hotkeyPanel");
+
+    if (hasUnsavedSettingsChanges) {
+        settingsPanel.classList.add("unsaved");
+    } else {
+        settingsPanel.classList.remove("unsaved");
+    }
+}
+
+function markSettingsDirty() {
+    if (isSyncingFromState) return;
+    setUnsavedSettingsState(true);
+}
+
+function setUnsavedMatchInfoState(isUnsaved) {
+    const matchInfoPanel = document.getElementById("seriesConfigPanel");
+
+    if (isUnsaved) {
+        matchInfoPanel.classList.add("unsaved");
+    } else {
+        matchInfoPanel.classList.remove("unsaved");
+    }
+}
+
+function getRosterValues() {
+    return {
+        blueRoster: [
+            document.getElementById("blueRoster1").value,
+            document.getElementById("blueRoster2").value,
+            document.getElementById("blueRoster3").value
+        ],
+        blueSubs: [
+            document.getElementById("blueSub1").value,
+            document.getElementById("blueSub2").value
+        ],
+        orangeRoster: [
+            document.getElementById("orangeRoster1").value,
+            document.getElementById("orangeRoster2").value,
+            document.getElementById("orangeRoster3").value
+        ],
+        orangeSubs: [
+            document.getElementById("orangeSub1").value,
+            document.getElementById("orangeSub2").value
+        ]
+    };
+}
+
+function getCurrentEditorDisplayInfoSnapshot() {
+    const rosterValues = getRosterValues();
+
+    return {
+        leagueName: document.getElementById("leagueNameInput").value,
+        weekRound: document.getElementById("weekRoundInput").value,
+        seriesInfo: document.getElementById("seriesInfoInput").value,
+        blueName: document.getElementById("blueNameInput").value,
+        orangeName: document.getElementById("orangeNameInput").value,
+        seriesType: document.getElementById("seriesTypeSelect").value,
+        blueLogoPath: pendingBlueLogoPath,
+        orangeLogoPath: pendingOrangeLogoPath,
+        blueRoster: rosterValues.blueRoster,
+        blueSubs: rosterValues.blueSubs,
+        orangeRoster: rosterValues.orangeRoster,
+        orangeSubs: rosterValues.orangeSubs
+    };
+}
+
+function arraysEqual(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+        return false;
+    }
+
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+
+    return true;
+}
+
+function updateMatchInfoDirtyState() {
+    if (isSyncingFromState) return;
+
+    if (!liveDisplayInfoSnapshot) {
+        setUnsavedMatchInfoState(false);
+        return;
+    }
+
+    const current = getCurrentEditorDisplayInfoSnapshot();
+
+    const isDirty =
+        current.leagueName !== liveDisplayInfoSnapshot.leagueName ||
+        current.weekRound !== liveDisplayInfoSnapshot.weekRound ||
+        current.seriesInfo !== liveDisplayInfoSnapshot.seriesInfo ||
+        current.blueName !== liveDisplayInfoSnapshot.blueName ||
+        current.orangeName !== liveDisplayInfoSnapshot.orangeName ||
+        current.seriesType !== liveDisplayInfoSnapshot.seriesType ||
+        current.blueLogoPath !== liveDisplayInfoSnapshot.blueLogoPath ||
+        current.orangeLogoPath !== liveDisplayInfoSnapshot.orangeLogoPath ||
+        !arraysEqual(current.blueRoster, liveDisplayInfoSnapshot.blueRoster) ||
+        !arraysEqual(current.blueSubs, liveDisplayInfoSnapshot.blueSubs) ||
+        !arraysEqual(current.orangeRoster, liveDisplayInfoSnapshot.orangeRoster) ||
+        !arraysEqual(current.orangeSubs, liveDisplayInfoSnapshot.orangeSubs);
+
+    setUnsavedMatchInfoState(isDirty);
+}
+
+function collectDisplayInfoPayload() {
+    const rosterValues = getRosterValues();
+
+    return {
+        leagueName: document.getElementById("leagueNameInput").value,
+        weekRound: document.getElementById("weekRoundInput").value,
+        seriesInfo: document.getElementById("seriesInfoInput").value,
+        blueName: document.getElementById("blueNameInput").value,
+        orangeName: document.getElementById("orangeNameInput").value,
+        seriesType: document.getElementById("seriesTypeSelect").value,
+        blueLogoPath: pendingBlueLogoPath,
+        orangeLogoPath: pendingOrangeLogoPath,
+        blueRoster: rosterValues.blueRoster,
+        blueSubs: rosterValues.blueSubs,
+        orangeRoster: rosterValues.orangeRoster,
+        orangeSubs: rosterValues.orangeSubs
+    };
+}
+
+function queueMatchInfo() { socket.emit("updateDisplayInfoQueued", collectDisplayInfoPayload()); }
+function instantMatchInfo() { socket.emit("updateDisplayInfoInstant", collectDisplayInfoPayload()); }
+function blueGoal() { socket.emit("blueGoal"); }
+function orangeGoal() { socket.emit("orangeGoal"); }
+function undoBlueGoal() { socket.emit("undoBlueGoal"); }
+function undoOrangeGoal() { socket.emit("undoOrangeGoal"); }
+function blueSeriesWin() { socket.emit("blueSeriesWin"); }
+function orangeSeriesWin() { socket.emit("orangeSeriesWin"); }
+function undoBlueSeries() { socket.emit("undoBlueSeries"); }
+function undoOrangeSeries() { socket.emit("undoOrangeSeries"); }
+function blueWins() { socket.emit("blueWins"); }
+function orangeWins() { socket.emit("orangeWins"); }
+function undoLastAction() { socket.emit("undoLastAction"); }
+function swapTeams() { socket.emit("swapTeams"); }
+function resetGame() { socket.emit("resetGame"); }
+function resetSeries() { socket.emit("resetSeries"); }
+function fullReset() { socket.emit("fullReset"); }
+function startTimingDisplay() { socket.emit("startTimingDisplay"); }
+function stopTimingDisplay() { socket.emit("stopTimingDisplay"); }
+function resetTimingDisplay() { socket.emit("resetTimingDisplay"); }
+
+function setSettingsInputsFromState() {
+    isSyncingFromState = true;
+
+    document.getElementById("overlayDelayInput").value = overlayDelaySeconds;
+    document.getElementById("hkBlueGoal").value = hotkeys.blueGoal;
+    document.getElementById("hkOrangeGoal").value = hotkeys.orangeGoal;
+    document.getElementById("hkBlueWins").value = hotkeys.blueWins;
+    document.getElementById("hkOrangeWins").value = hotkeys.orangeWins;
+    document.getElementById("hkResetGame").value = hotkeys.resetGame;
+    document.getElementById("hkResetSeries").value = hotkeys.resetSeries;
+    document.getElementById("hkFullReset").value = hotkeys.fullReset;
+
+    isSyncingFromState = false;
+}
+
+function normalizeKeyValue(value) {
+    return value.trim().toUpperCase().slice(0, 1);
+}
+
+function normalizeDelayValue(value) {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed) || parsed < 0) return 0;
+    return parsed;
+}
+
+function showHotkeyStatus(message) {
+    document.getElementById("hotkeyStatus").textContent = message;
+}
+
+function sendOverlayDelayToServer() {
+    socket.emit("setOverlayDelay", overlayDelaySeconds);
+}
+
+function saveSettings() {
+    overlayDelaySeconds = normalizeDelayValue(document.getElementById("overlayDelayInput").value);
+
+    hotkeys = {
+        blueGoal: normalizeKeyValue(document.getElementById("hkBlueGoal").value),
+        orangeGoal: normalizeKeyValue(document.getElementById("hkOrangeGoal").value),
+        blueWins: normalizeKeyValue(document.getElementById("hkBlueWins").value),
+        orangeWins: normalizeKeyValue(document.getElementById("hkOrangeWins").value),
+        resetGame: normalizeKeyValue(document.getElementById("hkResetGame").value),
+        resetSeries: normalizeKeyValue(document.getElementById("hkResetSeries").value),
+        fullReset: normalizeKeyValue(document.getElementById("hkFullReset").value)
+    };
+
+    localStorage.setItem("scoreboardSettings", JSON.stringify({
+        overlayDelaySeconds: overlayDelaySeconds,
+        hotkeys: hotkeys
+    }));
+
+    sendOverlayDelayToServer();
+    setSettingsInputsFromState();
+    setUnsavedSettingsState(false);
+    showHotkeyStatus("Settings saved.");
+}
+
+function resetSettingsToDefault() {
+    overlayDelaySeconds = defaultSettings.overlayDelaySeconds;
+    hotkeys = { ...defaultSettings.hotkeys };
+
+    localStorage.setItem("scoreboardSettings", JSON.stringify({
+        overlayDelaySeconds: overlayDelaySeconds,
+        hotkeys: hotkeys
+    }));
+
+    sendOverlayDelayToServer();
+    setSettingsInputsFromState();
+    setUnsavedSettingsState(false);
+    showHotkeyStatus("Settings reset to default.");
+}
+
+function loadSettings() {
+    const savedSettings = localStorage.getItem("scoreboardSettings");
+
+    if (savedSettings) {
+        try {
+            const parsed = JSON.parse(savedSettings);
+            overlayDelaySeconds = normalizeDelayValue(parsed.overlayDelaySeconds);
+            hotkeys = {
+                ...defaultSettings.hotkeys,
+                ...(parsed.hotkeys || {})
+            };
+        } catch (error) {
+            overlayDelaySeconds = defaultSettings.overlayDelaySeconds;
+            hotkeys = { ...defaultSettings.hotkeys };
+        }
+    } else {
+        overlayDelaySeconds = defaultSettings.overlayDelaySeconds;
+        hotkeys = { ...defaultSettings.hotkeys };
+    }
+
+    setSettingsInputsFromState();
+    setUnsavedSettingsState(false);
+}
+
+function isTypingInInput() {
+    const active = document.activeElement;
+    return active && (
+        active.tagName === "INPUT" ||
+        active.tagName === "TEXTAREA" ||
+        active.tagName === "SELECT"
+    );
+}
+
+function normalizeTextInputValue(input) {
+    input.value = input.value.toUpperCase();
+}
+
+function getCurrentGameNumberFromState(gameState) {
+    const blueSeries = Number(gameState.blueSeries || 0);
+    const orangeSeries = Number(gameState.orangeSeries || 0);
+    return blueSeries + orangeSeries + 1;
+}
+
+function formatTimingMs(ms) {
+    const safeMs = Math.max(0, ms);
+    const totalTenths = Math.floor(safeMs / 100);
+    const minutes = Math.floor(totalTenths / 600);
+    const seconds = Math.floor((totalTenths % 600) / 10);
+    const tenths = totalTenths % 10;
+
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
+}
+
+function updateTimingUI() {
+    const timingPanel = document.getElementById("timingPanel");
+    const timingDisplayValue = document.getElementById("timingDisplayValue");
+    const timingSettingsStatus = document.getElementById("timingSettingsStatus");
+
+    let displayMs = timingDisplayElapsedMs;
+
+    if (timingDisplayRunning && timingDisplayStartEpochMs > 0) {
+        displayMs = Date.now() - timingDisplayStartEpochMs;
+    }
+
+    timingDisplayValue.textContent = formatTimingMs(displayMs);
+
+    if (timingDisplayRunning) {
+        timingPanel.classList.add("running");
+        timingSettingsStatus.textContent = "Timing display running.";
+    } else {
+        timingPanel.classList.remove("running");
+
+        if (displayMs > 0) {
+            timingSettingsStatus.textContent = `Timing display stopped at ${formatTimingMs(displayMs)}.`;
+        } else {
+            timingSettingsStatus.textContent = "Timing display idle.";
+        }
+    }
+}
+
+function syncTimingLoop() {
+    if (timingIntervalId !== null) {
+        clearInterval(timingIntervalId);
+        timingIntervalId = null;
+    }
+
+    updateTimingUI();
+
+    if (timingDisplayRunning) {
+        timingIntervalId = setInterval(updateTimingUI, 100);
+    }
+}
+
+function updateOverlayAssetStatusFromState(gameState) {
+    const statusEl = document.getElementById("overlayAssetStatus");
+
+    if (gameState && gameState.overlayImagePath) {
+        statusEl.textContent = "Custom overlay image is loaded on the server.";
+    } else {
+        statusEl.textContent = "No custom overlay image loaded.";
+    }
+}
+
+function setLogoPreview(imgId, placeholderId, path) {
+    const img = document.getElementById(imgId);
+    const placeholder = document.getElementById(placeholderId);
+
+    if (path) {
+        img.src = path;
+        img.style.display = "block";
+        placeholder.style.display = "none";
+    } else {
+        img.removeAttribute("src");
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+    }
+}
+
+function updateLogoStatusesFromState() {
+    document.getElementById("blueLogoStatus").textContent = pendingBlueLogoPath ? "Blue logo ready." : "No logo loaded.";
+    document.getElementById("orangeLogoStatus").textContent = pendingOrangeLogoPath ? "Orange logo ready." : "No logo loaded.";
+
+    setLogoPreview("blueLogoPreview", "blueLogoPreviewPlaceholder", pendingBlueLogoPath);
+    setLogoPreview("orangeLogoPreview", "orangeLogoPreviewPlaceholder", pendingOrangeLogoPath);
+}
+
+function updateSeriesStatusFromState(gameState) {
+    const statusEl = document.getElementById("seriesConfigStatus");
+    statusEl.textContent = `First to ${gameState.seriesWinsRequired}`;
+}
+
+function updateCurrentGameFromState(gameState) {
+    document.getElementById("currentGameDisplay").textContent = getCurrentGameNumberFromState(gameState);
+}
+
+function updatePanelTitlesFromState(gameState) {
+    const blueName = (gameState.blueName || "BLUE").trim() || "BLUE";
+    const orangeName = (gameState.orangeName || "ORANGE").trim() || "ORANGE";
+
+    document.getElementById("blueTeamPanelTitle").textContent = blueName;
+    document.getElementById("orangeTeamPanelTitle").textContent = orangeName;
+}
+
+function renderHistory(history) {
+    const historyList = document.getElementById("historyList");
+    historyList.innerHTML = "";
+
+    if (!history || history.length === 0) {
+        const emptyEl = document.createElement("div");
+        emptyEl.className = "history-empty";
+        emptyEl.textContent = "No history yet.";
+        historyList.appendChild(emptyEl);
+        return;
+    }
+
+    history.forEach((entry) => {
+        if (entry.type === "goal") {
+            const item = document.createElement("div");
+            item.className = `history-goal ${entry.team}`;
+            item.textContent = entry.text;
+            historyList.appendChild(item);
+        } else if (entry.type === "final") {
+            const block = document.createElement("div");
+            block.className = "history-final-block";
+
+            const header = document.createElement("div");
+            header.className = "history-final-header";
+            header.textContent = `Game ${entry.gameNumber} Final`;
+
+            const winner = document.createElement("div");
+            winner.className = `history-final-winner ${entry.winnerTeam}`;
+            winner.textContent = `${entry.winnerName} Wins`;
+
+            const score = document.createElement("div");
+            score.className = "history-final-score";
+
+            const blueSpan = document.createElement("span");
+            blueSpan.className = "history-blue-score";
+            blueSpan.textContent = entry.blueScore;
+
+            const middleSpan = document.createElement("span");
+            middleSpan.textContent = " - ";
+
+            const orangeSpan = document.createElement("span");
+            orangeSpan.className = "history-orange-score";
+            orangeSpan.textContent = entry.orangeScore;
+
+            score.appendChild(blueSpan);
+            score.appendChild(middleSpan);
+            score.appendChild(orangeSpan);
+
+            block.appendChild(header);
+            block.appendChild(winner);
+            block.appendChild(score);
+
+            historyList.appendChild(block);
+        }
+    });
+
+    historyList.scrollTop = historyList.scrollHeight;
+}
+
+function clearSelectedSwapTarget() {
+    selectedSwapTarget = null;
+    document.querySelectorAll(".roster-input").forEach((input) => {
+        input.classList.remove("selected-sub");
+    });
+}
+
+function handleRosterSwapClick(inputId, team, type, index) {
+    const inputEl = document.getElementById(inputId);
+
+    if (type === "sub") {
+        if (
+            selectedSwapTarget &&
+            selectedSwapTarget.team === team &&
+            selectedSwapTarget.type === "sub" &&
+            selectedSwapTarget.index === index
+        ) {
+            clearSelectedSwapTarget();
+            return;
+        }
+
+        clearSelectedSwapTarget();
+        selectedSwapTarget = { team, type, index, inputId };
+        inputEl.classList.add("selected-sub");
+        return;
+    }
+
+    if (type === "roster") {
+        if (
+            selectedSwapTarget &&
+            selectedSwapTarget.team === team &&
+            selectedSwapTarget.type === "sub"
+        ) {
+            const subInput = document.getElementById(selectedSwapTarget.inputId);
+            const rosterInput = inputEl;
+
+            const temp = rosterInput.value;
+            rosterInput.value = subInput.value;
+            subInput.value = temp;
+
+            clearSelectedSwapTarget();
+            updateMatchInfoDirtyState();
+            return;
+        }
+
+        clearSelectedSwapTarget();
+    }
+}
+
+async function uploadOverlayImage(file) {
+    const statusEl = document.getElementById("overlayAssetStatus");
+    statusEl.textContent = "Uploading overlay image...";
+
+    const formData = new FormData();
+    formData.append("overlayImage", file);
+
+    try {
+        const response = await fetch(`/api/room/${encodeURIComponent(roomId)}/upload-overlay`, {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || "Upload failed.");
+        }
+
+        statusEl.textContent = "Overlay image uploaded to server.";
+    } catch (error) {
+        statusEl.textContent = "Upload failed: " + error.message;
+    }
+}
+
+async function clearOverlayImage() {
+    const statusEl = document.getElementById("overlayAssetStatus");
+    statusEl.textContent = "Clearing overlay image...";
+
+    try {
+        const response = await fetch(`/api/room/${encodeURIComponent(roomId)}/clear-overlay`, {
+            method: "POST"
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || "Clear failed.");
+        }
+
+        statusEl.textContent = "Overlay image cleared from server.";
+    } catch (error) {
+        statusEl.textContent = "Clear failed: " + error.message;
+    }
+}
+
+async function uploadBlueLogo(file) {
+    const statusEl = document.getElementById("blueLogoStatus");
+    statusEl.textContent = "Uploading blue logo...";
+
+    const formData = new FormData();
+    formData.append("blueLogo", file);
+
+    try {
+        const response = await fetch(`/api/room/${encodeURIComponent(roomId)}/upload-blue-logo`, {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || "Upload failed.");
+        }
+
+        pendingBlueLogoPath = result.blueLogoPath || "";
+        updateLogoStatusesFromState();
+        updateMatchInfoDirtyState();
+    } catch (error) {
+        statusEl.textContent = "Upload failed: " + error.message;
+    }
+}
+
+function clearBlueLogo() {
+    pendingBlueLogoPath = "";
+    updateLogoStatusesFromState();
+    updateMatchInfoDirtyState();
+}
+
+async function uploadOrangeLogo(file) {
+    const statusEl = document.getElementById("orangeLogoStatus");
+    statusEl.textContent = "Uploading orange logo...";
+
+    const formData = new FormData();
+    formData.append("orangeLogo", file);
+
+    try {
+        const response = await fetch(`/api/room/${encodeURIComponent(roomId)}/upload-orange-logo`, {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || "Upload failed.");
+        }
+
+        pendingOrangeLogoPath = result.orangeLogoPath || "";
+        updateLogoStatusesFromState();
+        updateMatchInfoDirtyState();
+    } catch (error) {
+        statusEl.textContent = "Upload failed: " + error.message;
+    }
+}
+
+function clearOrangeLogo() {
+    pendingOrangeLogoPath = "";
+    updateLogoStatusesFromState();
+    updateMatchInfoDirtyState();
+}
+
+function handleStateUpdate(gameState) {
+    latestState = gameState;
+
+    overlayDelaySeconds = gameState.overlayDelaySeconds ?? 0;
+    document.getElementById("overlayDelayInput").value = overlayDelaySeconds;
+
+    timingDisplayRunning = !!gameState.timingDisplayRunning;
+    timingDisplayStartEpochMs = Number(gameState.timingDisplayStartEpochMs || 0);
+    timingDisplayElapsedMs = Number(gameState.timingDisplayElapsedMs || 0);
+    syncTimingLoop();
+
+    isSyncingFromState = true;
+    document.getElementById("leagueNameInput").value = (gameState.leagueName || "").toUpperCase();
+    document.getElementById("seriesInfoInput").value = (gameState.seriesInfo || "").toUpperCase();
+    document.getElementById("weekRoundInput").value = (gameState.weekRound || "").toUpperCase();
+    document.getElementById("blueNameInput").value = (gameState.blueName || "").toUpperCase();
+    document.getElementById("orangeNameInput").value = (gameState.orangeName || "").toUpperCase();
+    document.getElementById("seriesTypeSelect").value = gameState.seriesType;
+
+    document.getElementById("blueRoster1").value = ((gameState.blueRoster && gameState.blueRoster[0]) || "").toUpperCase();
+    document.getElementById("blueRoster2").value = ((gameState.blueRoster && gameState.blueRoster[1]) || "").toUpperCase();
+    document.getElementById("blueRoster3").value = ((gameState.blueRoster && gameState.blueRoster[2]) || "").toUpperCase();
+    document.getElementById("blueSub1").value = ((gameState.blueSubs && gameState.blueSubs[0]) || "").toUpperCase();
+    document.getElementById("blueSub2").value = ((gameState.blueSubs && gameState.blueSubs[1]) || "").toUpperCase();
+
+    document.getElementById("orangeRoster1").value = ((gameState.orangeRoster && gameState.orangeRoster[0]) || "").toUpperCase();
+    document.getElementById("orangeRoster2").value = ((gameState.orangeRoster && gameState.orangeRoster[1]) || "").toUpperCase();
+    document.getElementById("orangeRoster3").value = ((gameState.orangeRoster && gameState.orangeRoster[2]) || "").toUpperCase();
+    document.getElementById("orangeSub1").value = ((gameState.orangeSubs && gameState.orangeSubs[0]) || "").toUpperCase();
+    document.getElementById("orangeSub2").value = ((gameState.orangeSubs && gameState.orangeSubs[1]) || "").toUpperCase();
+
+    isSyncingFromState = false;
+
+    pendingBlueLogoPath = gameState.blueLogoPath || "";
+    pendingOrangeLogoPath = gameState.orangeLogoPath || "";
+
+    liveDisplayInfoSnapshot = {
+        leagueName: (gameState.leagueName || "").toUpperCase(),
+        weekRound: (gameState.weekRound || "").toUpperCase(),
+        seriesInfo: (gameState.seriesInfo || "").toUpperCase(),
+        blueName: (gameState.blueName || "").toUpperCase(),
+        orangeName: (gameState.orangeName || "").toUpperCase(),
+        seriesType: gameState.seriesType || "Bo5",
+        blueLogoPath: gameState.blueLogoPath || "",
+        orangeLogoPath: gameState.orangeLogoPath || "",
+        blueRoster: [
+            ((gameState.blueRoster && gameState.blueRoster[0]) || "").toUpperCase(),
+            ((gameState.blueRoster && gameState.blueRoster[1]) || "").toUpperCase(),
+            ((gameState.blueRoster && gameState.blueRoster[2]) || "").toUpperCase()
+        ],
+        blueSubs: [
+            ((gameState.blueSubs && gameState.blueSubs[0]) || "").toUpperCase(),
+            ((gameState.blueSubs && gameState.blueSubs[1]) || "").toUpperCase()
+        ],
+        orangeRoster: [
+            ((gameState.orangeRoster && gameState.orangeRoster[0]) || "").toUpperCase(),
+            ((gameState.orangeRoster && gameState.orangeRoster[1]) || "").toUpperCase(),
+            ((gameState.orangeRoster && gameState.orangeRoster[2]) || "").toUpperCase()
+        ],
+        orangeSubs: [
+            ((gameState.orangeSubs && gameState.orangeSubs[0]) || "").toUpperCase(),
+            ((gameState.orangeSubs && gameState.orangeSubs[1]) || "").toUpperCase()
+        ]
+    };
+
+    clearSelectedSwapTarget();
+
+    updateSeriesStatusFromState(gameState);
+    updateCurrentGameFromState(gameState);
+    updatePanelTitlesFromState(gameState);
+
+    document.getElementById("blueScoreDisplay").textContent = gameState.blueScore;
+    document.getElementById("orangeScoreDisplay").textContent = gameState.orangeScore;
+    document.getElementById("blueSeriesDisplay").textContent = gameState.blueSeries;
+    document.getElementById("orangeSeriesDisplay").textContent = gameState.orangeSeries;
+
+    updateOverlayAssetStatusFromState(gameState);
+    updateLogoStatusesFromState();
+    renderHistory(gameState.history || []);
+    updateMatchInfoDirtyState();
+}
+
+document.getElementById("overlayFileInput").addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    uploadOverlayImage(file);
+    event.target.value = "";
+});
+
+document.getElementById("blueLogoInput").addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    uploadBlueLogo(file);
+    event.target.value = "";
+});
+
+document.getElementById("orangeLogoInput").addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    uploadOrangeLogo(file);
+    event.target.value = "";
+});
+
+[
+    "leagueNameInput",
+    "weekRoundInput",
+    "seriesInfoInput",
+    "blueNameInput",
+    "orangeNameInput",
+    "blueRoster1",
+    "blueRoster2",
+    "blueRoster3",
+    "blueSub1",
+    "blueSub2",
+    "orangeRoster1",
+    "orangeRoster2",
+    "orangeRoster3",
+    "orangeSub1",
+    "orangeSub2"
+].forEach((id) => {
+    const input = document.getElementById(id);
+
+    input.addEventListener("input", function() {
+        normalizeTextInputValue(this);
+        updateMatchInfoDirtyState();
+    });
+});
+
+document.getElementById("seriesTypeSelect").addEventListener("change", updateMatchInfoDirtyState);
+
+[
+    ["blueRoster1", "blue", "roster", 0],
+    ["blueRoster2", "blue", "roster", 1],
+    ["blueRoster3", "blue", "roster", 2],
+    ["blueSub1", "blue", "sub", 0],
+    ["blueSub2", "blue", "sub", 1],
+    ["orangeRoster1", "orange", "roster", 0],
+    ["orangeRoster2", "orange", "roster", 1],
+    ["orangeRoster3", "orange", "roster", 2],
+    ["orangeSub1", "orange", "sub", 0],
+    ["orangeSub2", "orange", "sub", 1]
+].forEach(([id, team, type, index]) => {
+    document.getElementById(id).addEventListener("click", function() {
+        handleRosterSwapClick(id, team, type, index);
+    });
+});
+
+document.addEventListener("keydown", function(event) {
+    if (isTypingInInput()) return;
+
+    const key = event.key.toUpperCase();
+
+    if (key === hotkeys.blueGoal) {
+        blueGoal();
+    } else if (key === hotkeys.orangeGoal) {
+        orangeGoal();
+    } else if (key === hotkeys.blueWins) {
+        blueWins();
+    } else if (key === hotkeys.orangeWins) {
+        orangeWins();
+    } else if (key === hotkeys.resetGame) {
+        resetGame();
+    } else if (key === hotkeys.resetSeries) {
+        resetSeries();
+    } else if (key === hotkeys.fullReset) {
+        fullReset();
+    }
+});
+
+document.querySelectorAll(".hotkey-row input").forEach((input) => {
+    input.addEventListener("input", function() {
+        this.value = normalizeKeyValue(this.value);
+        markSettingsDirty();
+    });
+});
+
+document.getElementById("overlayDelayInput").addEventListener("input", function() {
+    this.value = normalizeDelayValue(this.value);
+    markSettingsDirty();
+});
+
+document.addEventListener("click", function(event) {
+    const panel = document.getElementById("hotkeyPanel");
+    const button = document.getElementById("hotkeyToggleBtn");
+
+    if (!panel.contains(event.target) && !button.contains(event.target)) {
+        closeHotkeys();
+    }
+});
+
+socket.on("connect", () => {
+    joinRoomAsAdmin();
+});
+
+socket.on("joinAccepted", (payload) => {
+    document.getElementById("pageTitle").textContent = `Score Control — ${payload.roomId}`;
+    document.getElementById("roomInfoLine").textContent = `Room: ${payload.roomId} | Overlay: ${overlayUrl}`;
+    handleStateUpdate(payload.state);
+    showHotkeyStatus(`Connected to room "${payload.roomId}".`);
+});
+
+socket.on("joinError", (payload) => {
+    if (payload && payload.code === "BAD_ADMIN_PASSWORD") {
+        clearStoredAdminKey();
+        const retry = confirm("Incorrect admin password. Try again?");
+
+        if (retry) {
+            joinRoomAsAdmin();
+        } else {
+            document.body.innerHTML = "<div style='padding:30px;font-family:Arial,sans-serif;color:white;background:#121212;'>Admin access was not granted.</div>";
+        }
+
+        return;
+    }
+
+    alert(payload && payload.message ? payload.message : "Could not join room.");
+});
+
+socket.on("stateUpdate", (gameState) => {
+    handleStateUpdate(gameState);
+});
+
+loadSettings();
+updateOverlayAssetStatusFromState(latestState);
+updateLogoStatusesFromState();
+updateTimingUI();
+setUnsavedMatchInfoState(false);
+document.getElementById("roomInfoLine").textContent = `Room: ${roomId} | Overlay: ${overlayUrl}`;
+</script>
+
+</body>
+</html>
